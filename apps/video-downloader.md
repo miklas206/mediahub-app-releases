@@ -1,5 +1,7 @@
 # Video Downloader server
 
+In MediaHub 0.6.96 or later, open this app in App Store, choose your storage folder on first install, and select Install or update. Updates use the same screen. [Dansk vejledning](video-downloader.da.md)
+
 Install on a Linux Docker host with the Compose plugin. Prepare a writable downloads directory and a server certificate issued by your trusted CA. The installer can also issue the server certificate using a local CA certificate and signing key. Keep your CA key on its trusted host. For an already-issued certificate, put server.pem, server-key.pem and ca.pem in /opt/video-downloader/tls with permissions readable by the app user (default UID 1000).
 
 Download fetch.py from the [package index](../README.md). As administrator, substitute your own HTTPS name, port, LAN IP and mounted download directory:

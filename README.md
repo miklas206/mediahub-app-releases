@@ -8,7 +8,7 @@ Download the server edition of each app without a GitHub account. Each release p
 | Video Downloader | [Video Downloader server guide](apps/video-downloader.md) |
 | Plex GPU Transcoder | [Plex extension guide](apps/plex-gpu-transcoder.md) |
 
-On the target Linux host, download the release helper once and choose an app.
+For a standalone installation, use Python 3 and OpenSSL on the target Linux host. Download the release helper once and choose an app.
 
 ```sh
 curl -fLSs https://raw.githubusercontent.com/miklas206/mediahub-app-releases/main/fetch.py -o fetch.py

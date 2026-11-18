@@ -1,5 +1,7 @@
 # Plex GPU Transcoder
 
+In MediaHub 0.6.96 or later, open the installed Plex app and select Plex extensions. Updates use the same screen. [Dansk vejledning](plex-gpu-transcoder.da.md)
+
 This optional extension requires an installed MediaHub-managed Plex server and a prepared NVIDIA GPU on its Docker host. Install Plex from the MediaHub store first. The extension reads the required Plex libraries from your installed Plex image. Wait for active playback to finish.
 
 Download fetch.py as described in the [package index](../README.md), then run on the Plex host as administrator:
