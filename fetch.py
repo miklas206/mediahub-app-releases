@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Download and verify one published MediaHub app into a versioned directory."""
 import argparse
+import base64
+import subprocess
 import hashlib
 import io
 import json
@@ -14,6 +16,7 @@ import urllib.request
 
 PROJECT = "miklas206/mediahub-app-releases"
 APPS = ("mediaupload", "video-downloader", "plex-gpu-transcoder")
+RELEASE_KEY = b'-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAecGfD1y1sCS6XAinBoah72pMjhqPQUsbJS5Ed7jtpc4=\n-----END PUBLIC KEY-----\n'
 LIMIT = 32 * 1024 * 1024
 
 
@@ -27,8 +30,40 @@ def fetch(url, limit):
     return data
 
 
-def retrieve(app, destination):
+def signed_index(app):
     manifest = json.loads(fetch(f"https://raw.githubusercontent.com/{PROJECT}/main/apps/{app}.json", 16384))
+    signature = base64.b64decode(manifest.pop("signature"), validate=True)
+    if len(signature) != 64:
+        raise ValueError("Invalid release signature")
+    with tempfile.TemporaryDirectory() as work:
+        folder = Path(work)
+        (folder / "key").write_bytes(RELEASE_KEY)
+        (folder / "signature").write_bytes(signature)
+        (folder / "body").write_text(json.dumps(manifest, sort_keys=True, separators=(",", ":")), encoding="ascii")
+        result = subprocess.run(["openssl","pkeyutl","-verify","-pubin","-inkey",str(folder/"key"),"-rawin",
+                                 "-in",str(folder/"body"),"-sigfile",str(folder/"signature")],capture_output=True)
+        if result.returncode:
+            raise ValueError("Release signature verification failed")
+    return manifest
+
+
+def number(version):
+    if not isinstance(version,str) or not re.fullmatch(r"(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*)){2}",version):
+        raise ValueError("Invalid release version")
+    return tuple(map(int,version.split(".")))
+
+
+def retrieve(app, destination, approved=None, hub_version=None, installed=None):
+    manifest = signed_index(app)
+    if approved:
+        minimum=number(approved["version"])
+        offered=number(manifest["version"])
+        if offered < minimum or (offered == minimum and manifest["sha256"] != approved["sha256"]):
+            raise ValueError("Published package does not match the reviewed release")
+        if number(manifest["minimumHub"]) > number(hub_version):
+            raise ValueError("Update MediaHub first to use this release")
+    if installed and number(manifest["version"]) < number(installed):
+        raise ValueError("Package downgrade refused")
     version = manifest["version"]
     if manifest["app"] != app or not re.fullmatch(r"(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*)){2}", version):
         raise ValueError("Unexpected application or version")

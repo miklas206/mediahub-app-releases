@@ -2,5 +2,7 @@
   "app": "plex-gpu-transcoder",
   "version": "0.4.4",
   "sha256": "a1621b92bf424c8e308e5b72e2b52f9010d1afbd5156b4fcc3559cbd4be19a4d",
-  "sourceCommit": "0cd5bb05c625cb2edc450d145cdf94d32d1f3040"
+  "sourceCommit": "0cd5bb05c625cb2edc450d145cdf94d32d1f3040",
+  "minimumHub": "0.6.96",
+  "signature": "bHV2VGWc1RuZOaqPpRdx3s8p2/iwX4//8MS1g07x9h/dRjklE1zdvQMqkUgTCKmu3cYslsL7o8Tz9VFZ4xDsCg=="
 }

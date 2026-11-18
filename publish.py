@@ -1,5 +1,6 @@
 """Publish an allowlisted server package from a clean, tagged private source checkout."""
 import argparse
+import base64
 import gzip
 import hashlib
 import io
@@ -20,7 +21,12 @@ def cmd(*args, cwd):
     return subprocess.check_output(args, cwd=cwd)
 
 
-def publish(app, repo):
+def publish(app, repo, signing_key, minimum_hub):
+    if not re.fullmatch(r"[0-9]+(?:\.[0-9]+){2}",minimum_hub):
+        raise ValueError("Invalid minimum Hub version")
+    from fetch import RELEASE_KEY
+    if subprocess.check_output(["openssl","pkey","-in",str(signing_key),"-pubout"]) != RELEASE_KEY:
+        raise ValueError("Incorrect release signing key")
     def source(*args):
         return cmd("git", *args, cwd=repo)
     private = OWNER + "/" + app
@@ -66,7 +72,13 @@ def publish(app, repo):
         with urlopen(f"https://github.com/{PUBLIC}/releases/download/{tag}/{archive.name}",timeout=60) as downloaded:
             if hashlib.sha256(downloaded.read(32*1024*1024+1)).hexdigest()!=digest:
                 raise ValueError("Public release differs from the tagged source")
-    index.write_text(json.dumps(dict(app=app,version=version,sha256=digest,sourceCommit=commit),indent=2)+"\n")
+    manifest=dict(app=app,version=version,sha256=digest,sourceCommit=commit,minimumHub=minimum_hub)
+    with tempfile.NamedTemporaryFile() as body:
+        body.write(json.dumps(manifest,sort_keys=True,separators=(",",":")).encode("ascii"))
+        body.flush()
+        signature=cmd("openssl","pkeyutl","-sign","-rawin","-inkey",str(signing_key),"-in",body.name,cwd=repo)
+    manifest["signature"]=base64.b64encode(signature).decode()
+    index.write_text(json.dumps(manifest,indent=2)+"\n")
     cmd("git","add","--",str(index),cwd=CHANNEL)
     cmd("git","commit","-m",f"Publish {app} {version}",cwd=CHANNEL)
     cmd("git","push","origin","HEAD:main",cwd=CHANNEL)
@@ -76,5 +88,7 @@ if __name__ == "__main__":
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("app",choices=["mediaupload","video-downloader","plex-gpu-transcoder"])
     parser.add_argument("source",type=Path)
+    parser.add_argument("--signing-key",type=Path,required=True)
+    parser.add_argument("--minimum-hub",default="0.6.96")
     args=parser.parse_args()
-    publish(args.app,args.source.resolve(strict=True))
+    publish(args.app,args.source.resolve(strict=True),args.signing_key,args.minimum_hub)
