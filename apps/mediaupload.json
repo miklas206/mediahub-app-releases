@@ -1,0 +1,8 @@
+{
+  "app": "mediaupload",
+  "version": "0.1.40",
+  "sha256": "006df7490bda4b38a22007bdab913acfdd15ebbab76479833fc74d25e09d0cc1",
+  "sourceCommit": "0281bfc40bf3ff8bb956ab17c066a423322ee3ec",
+  "minimumHub": "0.6.96",
+  "signature": "2BshS+jZTAcxDPPyXSyfwUOK+riRnFwPfJp0L46HFCCGGN7RI2VvWPRtPyVyOQLAYP+EE9/EiAq9pf+DrI6xBQ=="
+}
