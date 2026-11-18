@@ -93,15 +93,29 @@ def retrieve(app, destination, approved=None, hub_version=None, installed=None):
                 with path.open("xb") as output:
                     shutil.copyfileobj(archive.extractfile(member), output)
                 path.chmod(0o755 if member.mode & 0o111 else 0o644)
+        if not (stage / "VERSION").is_file() or (stage / "VERSION").read_text().strip() != version:
+            raise ValueError("Package version differs from index")
         if not (stage / "README.md").is_file():
             raise ValueError("Missing installation instructions")
         if target.exists():
             # Confirm the entire existing release before reusing it on retry.
             entries = list(target.rglob("*"))
-            if (target.is_symlink() or any(p.is_symlink() for p in entries)
-                    or {p.relative_to(target).as_posix() for p in entries if p.is_file()} != seen
-                    or any((target / name).read_bytes() != (stage / name).read_bytes() for name in seen)):
+            if target.is_symlink() or any(p.is_symlink() for p in entries):
+                raise ValueError(f"Unexpected link in existing release: {target}")
+            actual = {p.relative_to(target).as_posix() for p in entries if p.is_file()}
+            extra = actual - seen
+            for name in extra:
+                rel = Path(name)
+                source = re.fullmatch(r"([A-Za-z0-9_]+)\.cpython-[0-9]+(?:\.opt-[12])?\.pyc",rel.name)
+                if (rel.parent.name != "__pycache__" or not source or
+                    (rel.parent.parent / (source[1]+".py")).as_posix() not in seen):
+                    raise ValueError(f"Existing release directory has local changes: {target}")
+            if seen - actual or any((target/name).read_bytes() != (stage/name).read_bytes() for name in seen):
                 raise ValueError(f"Existing release directory has local changes: {target}")
+            # Python's installer imports create derived files. Discard only caches of
+            # identified, verified modules so execution always uses the published source.
+            for name in extra:
+                (target/name).unlink(missing_ok=True)
         else:
             stage.chmod(0o755)
             os.rename(stage, target)
