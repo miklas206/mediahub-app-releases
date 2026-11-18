@@ -16,3 +16,7 @@ python3 fetch.py mediaupload
 ```
 
 The helper verifies the current archive and prints the path to its unpacked release. Follow the app guide to activate it. Repeat these steps for updates. Keep application data outside the versioned release directories.
+
+## Publishing an update
+
+The maintainer reviews package-files.txt in the private application repository, updates VERSION and runs the app’s tests. Push the reviewed source and its vX.Y.Z tag. From a current clean checkout of this distribution repository, run `python3 publish.py APP /path/to/private/checkout` using the maintainer’s GitHub CLI login. The command builds only the listed files, checks the public download and advances that app’s index. The source repositories and their history stay private. MediaHub host releases pin the version and checksum they have qualified.
