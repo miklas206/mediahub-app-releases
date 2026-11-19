@@ -1,6 +1,6 @@
 # MediaUpload
 
-In MediaHub 0.6.96 or later, open this app in App Store, choose your storage folder on first install, and select Install or update. Updates use the same screen. [Dansk vejledning](mediaupload.da.md)
+In MediaHub 0.6.96 or later, open this app under **Apps** (**App Store** in 0.6.96), choose your storage folder on first install, and select Install or update. Updates use the same screen. [Dansk vejledning](mediaupload.da.md)
 
 Install the standalone Docker edition on a Linux host with Python 3, OpenSSL, Docker and its Compose plugin. Choose a readable media library. MediaUpload mounts it read-only. Prepared copies and persistent settings live under /opt/mediaupload-docker.
 
